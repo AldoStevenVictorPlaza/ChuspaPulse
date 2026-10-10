@@ -91,3 +91,25 @@ Una respuesta del endpoint puede tener el siguiente formato:
 - El historial de alertas permite consultar eventos registrados previamente, incluso si la alerta ya no se encuentra activa.
 - Los parámetros `from` y `until` permiten filtrar las alertas por un rango de tiempo específico.
 - La respuesta del endpoint utiliza el formato JSON, manteniendo el mismo estilo que el resto de los endpoints HTTP del proyecto.
+
+## Endpoint GET /alerts/history
+
+Permite consultar el historial de alertas registradas en la base de datos SQLite.
+
+**Parámetros opcionales de consulta (Query Params):**
+- `limit`: Número máximo de registros a retornar (por defecto 10).
+- `offset`: Desplazamiento para paginación (por defecto 0).
+
+**Ejemplo de respuesta JSON:**
+```json
+{
+  "history": [
+    {
+      "timestamp": 1723000000,
+      "metrica": "cpu",
+      "umbral": 80.0,
+      "valor": 95.2,
+      "mensaje": "Uso de CPU alto"
+    }
+  ]
+}

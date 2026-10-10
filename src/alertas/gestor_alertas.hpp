@@ -1,5 +1,5 @@
 #pragma once
-
+#include <SQLiteCpp/SQLiteCpp.h>
 #include <vector>
 #include <functional>
 #include <string>
@@ -8,15 +8,16 @@
 namespace pulso::alertas {
 
 /**
- * @brief Gestor de múltiples alertas de umbral con callback de notificación.
+ * @brief Gestor de múltiples alertas de umbral con callback de notificación y persistencia en SQLite.
  *
  * Permite registrar varias AlertaUmbral y evaluarlas todas contra un
- * MetricSnapshot. Cuando una alerta se dispara, ejecuta un callback
- * con el mensaje descriptivo de la alerta.
+ * MetricSnapshot. Cuando una alerta se dispara, ejecuta el callback
+ * y guarda un registro en la base de datos si esta fue configurada.
  */
 class GestorAlertas {
 public:
     GestorAlertas() = default;
+    explicit GestorAlertas(SQLite::Database& db) : db_(&db) {}
     ~GestorAlertas() = default;
 
     /**
@@ -34,9 +35,7 @@ public:
     /**
      * @brief Evalúa todas las alertas registradas contra el snapshot.
      *
-     * Solo llama el callback para las alertas que se disparan.
-     * Si no hay callback registrado, no hace nada.
-     * Si no hay alertas registradas, no hace nada.
+     * Ejecuta el callback y guarda la alerta disparada en la tabla `alerts`.
      *
      * @param snap Snapshot con las métricas actuales del sistema.
      */
@@ -49,6 +48,7 @@ public:
     std::size_t cantidadAlertas() const;
 
 private:
+    SQLite::Database* db_{nullptr};
     std::vector<AlertaUmbral> alertas_;
     std::function<void(const std::string&)> callback_;
 };
