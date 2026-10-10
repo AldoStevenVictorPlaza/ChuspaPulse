@@ -120,3 +120,18 @@ Se activa cuando el uso del almacenamiento supera el 95%.
 ## Resumen
 
 El sistema de alertas de Pulso permite supervisar métricas críticas mediante reglas configurables. Gracias a la evaluación automática de umbrales y la consulta de alertas activas, es posible detectar rápidamente situaciones que requieren atención.
+
+
+# Sistema de Alertas
+
+El módulo `GestorAlertas` evalúa periódicamente las métricas recolectadas por el sistema. Si alguna métrica sobrepasa los umbrales máximos establecidos, se registra una advertencia en los logs del agente.
+
+## Configuración de Umbrales (`pulso.toml`)
+
+Los umbrales se leen desde la sección `[umbrales]` del archivo de configuración:
+
+```toml
+[umbrales]
+cpu_max = 80.0
+ram_max = 85.0
+disco_max = 90.0

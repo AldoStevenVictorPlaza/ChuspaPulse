@@ -1,3 +1,6 @@
+
+
+#include "alertas/gestor_alertas.hpp" // O la ruta exacta donde esté gestor_alertas.hpp
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -235,6 +238,19 @@ int main(int argc, char* argv[]) {
     // Abrir base de datos e inicializar esquema
     pulso::storage::Storage storage(cfg.storage.ruta_db);
     pulso::storage::inicializarEsquema(storage);
+    
+    // Instanciar GestorAlertas con la configuración de umbrales
+    pulso::alertas::GestorAlertas gestorAlertas(
+        cfg.umbrales.cpu_max,
+        cfg.umbrales.ram_max,
+        cfg.umbrales.disco_max
+    );
+
+    log.info("GestorAlertas activo -> Umbrales: CPU=" + 
+             std::to_string(cfg.umbrales.cpu_max) + "%, RAM=" + 
+             std::to_string(cfg.umbrales.ram_max) + "%, Disco=" + 
+             std::to_string(cfg.umbrales.disco_max) + "%");
+
 
     // Sampler (bucle infinito de coleccion)
     pulso::sampler::Sampler sampler(

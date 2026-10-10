@@ -16,6 +16,12 @@ public:
         : std::runtime_error(mensaje) {}
 };
 
+
+struct UmbralesConfig {
+    double cpu_max = 80.0;       // Umbral de porcentaje de CPU
+    double ram_max = 85.0;       // Umbral de porcentaje de RAM
+    double disco_max = 90.0;     // Umbral de porcentaje de Disco
+};
 // ---------------------------------------------------------------------------
 // Estructuras de configuración
 // ---------------------------------------------------------------------------
@@ -36,6 +42,9 @@ struct MonitorConfig
 
     /// Constructor con valores por defecto.
     MonitorConfig() = default;
+    
+    /// Configuración de umbrales para las alertas.
+    UmbralesConfig umbrales;
 };
 struct ConfigServidor {
     std::string host  = "0.0.0.0";
