@@ -5,6 +5,11 @@ Todos los cambios importantes de este proyecto serán documentados en este archi
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/)
 y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Añadido
+- feat: instanciar GestorAlertas en el sampler y conectar a la configuracion (#836)
+
 ## [v0.1.0] - 2026-08-30
 
 ### Añadido
@@ -24,10 +29,6 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 ## [0.1.0] - 2026-04-22
 
 ### Añadido
-
-* Inicio del proyecto Pulso
-* Creación del repositorio
-* 
 
 - Inicio del proyecto Pulso
 - Creación del repositorio
