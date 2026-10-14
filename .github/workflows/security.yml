@@ -31,22 +31,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libsqlite3-dev
 
-      - name: Generar stub de version.hpp
-        run: |
-          mkdir -p src/core
-          cat << 'EOF' > src/core/version.hpp
-          #ifndef CORE_VERSION_HPP
-          #define CORE_VERSION_HPP
-
-          #include <string>
-
-          namespace pulso {
-             const std::string APP_VERSION = "0.1.0";
-          }
-
-          #endif
-          EOF
-
       - name: Compilar proyecto C++
         run: |
           make
