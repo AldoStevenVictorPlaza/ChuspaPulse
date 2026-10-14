@@ -1,3 +1,20 @@
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/core/version.hpp")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/core")
+    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/core/version.hpp"
+"#ifndef CORE_VERSION_HPP
+#define CORE_VERSION_HPP
+
+#include <string>
+
+namespace pulso {
+    const std::string APP_VERSION = \"0.1.0\";
+}
+
+#endif
+")
+endif()
+
+
 add_executable(pulso main.cpp)
 
 target_sources(pulso PRIVATE
