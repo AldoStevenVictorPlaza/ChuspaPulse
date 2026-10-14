@@ -28,12 +28,28 @@ jobs:
       # DEBES reemplazar estos comandos con los reales de tu proyecto.
       - name: Instalar dependencias del sistema
         run: |
-           sudo apt-get update
-           sudo apt-get install -y build-essential libsqlite3-dev
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev
+
+      - name: Generar stub de version.hpp
+        run: |
+          mkdir -p src/core
+          cat << 'EOF' > src/core/version.hpp
+          #ifndef CORE_VERSION_HPP
+          #define CORE_VERSION_HPP
+
+          #include <string>
+
+          namespace pulso {
+             const std::string APP_VERSION = "0.1.0";
+          }
+
+          #endif
+          EOF
 
       - name: Compilar proyecto C++
         run: |
-           make
+          make
           
       - name: Análisis de CodeQL
         uses: github/codeql-action/analyze@v4.37.3
