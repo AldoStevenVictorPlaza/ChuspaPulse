@@ -112,3 +112,7 @@ target_link_libraries(test_gestor_alertas PRIVATE
     GTest::gtest_main
 )
 gtest_discover_tests(test_gestor_alertas)
+
+add_executable(test_alertas_persistencia test_alertas_persistencia.cpp)
+target_link_libraries(test_alertas_persistencia PRIVATE pulso_lib SQLiteCpp GTest::gtest GTest::gtest_main)
+gtest_discover_tests(test_alertas_persistencia)

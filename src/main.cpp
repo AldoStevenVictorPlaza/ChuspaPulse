@@ -286,6 +286,25 @@ server.Get("/config", handle_config);
     // GET /metrics/prometheus
     pulso::http::registrarPrometheus(server, storage);
 
+// GET /alerts/history
+    server.Get("/alerts/history", [&gestorAlertas](const httplib::Request&, httplib::Response& res) {
+        auto historial = gestorAlertas.obtenerHistorial();
+        
+        std::string json = "[";
+        for (size_t i = 0; i < historial.size(); ++i) {
+            json += "{\"id\":" + std::to_string(historial[i].id) +
+                    ",\"timestamp\":" + std::to_string(historial[i].timestamp) +
+                    ",\"metrica\":\"" + historial[i].metrica + "\"" +
+                    ",\"umbral\":" + std::to_string(historial[i].umbral) +
+                    ",\"valor\":" + std::to_string(historial[i].valor) +
+                    ",\"mensaje\":\"" + historial[i].mensaje + "\"}";
+            if (i + 1 < historial.size()) json += ",";
+        }
+        json += "]";
+
+        res.set_content(json, "application/json");
+    });
+
     // Arrancar servidor HTTP en thread separado
     std::thread http_thread([&]() {
         log.info("Servidor HTTP escuchando en " +

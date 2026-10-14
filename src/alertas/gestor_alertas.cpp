@@ -53,4 +53,31 @@ std::size_t GestorAlertas::cantidadAlertas() const {
     return alertas_.size();
 }
 
+
+std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial() const {
+    std::vector<RegistroAlerta> historial;
+    if (!db_) return historial;
+
+    try {
+        SQLite::Statement query(*db_, 
+            "SELECT id, timestamp, metrica, umbral, valor, mensaje FROM alerts ORDER BY id DESC"
+        );
+
+        while (query.executeStep()) {
+            RegistroAlerta reg;
+            reg.id = query.getColumn(0).getInt();
+            reg.timestamp = query.getColumn(1).getInt64();
+            reg.metrica = query.getColumn(2).getText();
+            reg.umbral = query.getColumn(3).getDouble();
+            reg.valor = query.getColumn(4).getDouble();
+            reg.mensaje = query.getColumn(5).getText();
+            historial.push_back(reg);
+        }
+    } catch (const std::exception& e) {
+        // En caso de que la tabla aún no exista
+    }
+
+    return historial;
+}
 } // namespace pulso::alertas
+

@@ -1,10 +1,15 @@
 #pragma once
+#ifndef METRIC_SNAPSHOT_HPP
+#define METRIC_SNAPSHOT_HPP
 
+#include <string>
 #include <chrono>
 
 namespace pulso {
 
 struct MetricSnapshot {
+    std::string nombre;
+    double valor;
     double cpu;
     double ram;
     double disk;
@@ -14,27 +19,33 @@ struct MetricSnapshot {
 
     // Constructor por defecto
     MetricSnapshot()
-        : cpu(0)
-        , ram(0)
-        , disk(0)
-        , rx_bytes(0)
-        , tx_bytes(0)
+        : nombre("")
+        , valor(0.0)
+        , cpu(0.0)
+        , ram(0.0)
+        , disk(0.0)
+        , rx_bytes(0.0)
+        , tx_bytes(0.0)
         , timestamp(std::chrono::system_clock::now()) {}
 
-    // Constructor con valores
-    MetricSnapshot(double cpu_val, double ram_val, double disk_val,
-                   double rx_val, double tx_val)
-        : cpu(cpu_val)
+    // Constructor completo con nombre y valor
+    MetricSnapshot(const std::string& nom, double val, double cpu_val = 0.0, 
+                   double ram_val = 0.0, double disk_val = 0.0,
+                   double rx_val = 0.0, double tx_val = 0.0)
+        : nombre(nom)
+        , valor(val)
+        , cpu(cpu_val)
         , ram(ram_val)
         , disk(disk_val)
         , rx_bytes(rx_val)
         , tx_bytes(tx_val)
         , timestamp(std::chrono::system_clock::now()) {}
 
-    // Verifica que todas las métricas sean mayores a 0
+    // Verifica que las métricas principales sean válidas
     bool isValid() const {
-        return cpu > 0 && ram > 0 && disk > 0 && rx_bytes > 0 && tx_bytes > 0;
+        return !nombre.empty() && valor >= 0.0;
     }
 };
 
 } // namespace pulso
+#endif

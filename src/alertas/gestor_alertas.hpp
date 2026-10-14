@@ -3,49 +3,33 @@
 #include <vector>
 #include <functional>
 #include <string>
+#include <cstdint>
 #include "alerta_umbral.hpp"
 
 namespace pulso::alertas {
 
-/**
- * @brief Gestor de múltiples alertas de umbral con callback de notificación y persistencia en SQLite.
- *
- * Permite registrar varias AlertaUmbral y evaluarlas todas contra un
- * MetricSnapshot. Cuando una alerta se dispara, ejecuta el callback
- * y guarda un registro en la base de datos si esta fue configurada.
- */
+struct RegistroAlerta {
+    int id{0};
+    int64_t timestamp{0};
+    std::string metrica;
+    double umbral{0.0};
+    double valor{0.0};
+    std::string mensaje;
+};
+
 class GestorAlertas {
 public:
     GestorAlertas() = default;
-    explicit GestorAlertas(SQLite::Database& db) : db_(&db) {}
+    explicit GestorAlertas(SQLite::Database& db);
     ~GestorAlertas() = default;
 
-    /**
-     * @brief Registra una nueva alerta en el gestor.
-     * @param alerta Instancia de AlertaUmbral a agregar.
-     */
     void addAlerta(const AlertaUmbral& alerta);
-
-    /**
-     * @brief Establece el callback de notificación.
-     * @param callback Función que recibe el mensaje de la alerta disparada.
-     */
     void setCallback(std::function<void(const std::string&)> callback);
-
-    /**
-     * @brief Evalúa todas las alertas registradas contra el snapshot.
-     *
-     * Ejecuta el callback y guarda la alerta disparada en la tabla `alerts`.
-     *
-     * @param snap Snapshot con las métricas actuales del sistema.
-     */
     void evaluar(const pulso::MetricSnapshot& snap) const;
-
-    /**
-     * @brief Devuelve la cantidad de alertas registradas.
-     * @return Número de alertas en el gestor.
-     */
     std::size_t cantidadAlertas() const;
+
+    // Método que requiere la API para GET /alerts/history
+    std::vector<RegistroAlerta> obtenerHistorial() const;
 
 private:
     SQLite::Database* db_{nullptr};
