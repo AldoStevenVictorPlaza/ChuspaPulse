@@ -51,6 +51,7 @@ jobs:
 
       - name: Compilar proyecto C++
         run: |
+          rm -rf build
           make
           
       - name: Análisis de CodeQL
