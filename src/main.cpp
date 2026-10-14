@@ -252,11 +252,15 @@ int main(int argc, char* argv[]) {
              std::to_string(cfg.umbrales.disco_max) + "%");
 
 
+    // Gestor de Alertas
+    pulso::alertas::GestorAlertas gestor_alertas(cfg.umbrales);
+
     // Sampler (bucle infinito de coleccion)
     pulso::sampler::Sampler sampler(
         collectors,
         storage,
         cfg.sampler.intervalo_segundos
+        gestor_alertas
     );
     sampler.iniciar();
 
