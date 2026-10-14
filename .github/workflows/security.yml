@@ -26,8 +26,13 @@ jobs:
       # CAMBIO 3: Paso de compilación OBLIGATORIO para C++
       # CodeQL necesita "ver" cómo se construye tu proyecto para analizarlo.
       # DEBES reemplazar estos comandos con los reales de tu proyecto.
+      - name: Instalar dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev
       - name: Compilar proyecto C++
         run: |
+           make version || true
            make
           
       - name: Análisis de CodeQL
