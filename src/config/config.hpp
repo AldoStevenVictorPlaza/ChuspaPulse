@@ -43,8 +43,6 @@ struct MonitorConfig
     /// Constructor con valores por defecto.
     MonitorConfig() = default;
     
-    /// Configuración de umbrales para las alertas.
-    UmbralesConfig umbrales;
 };
 struct ConfigServidor {
     std::string host  = "0.0.0.0";
@@ -63,6 +61,7 @@ struct Config {
     ConfigServidor servidor;
     ConfigSampler  sampler;
     ConfigStorage  storage;
+    UmbralesConfig umbrales;
     std::string    nivel_log = "info";
     /// Formato de salida de métricas.
     /// Valores válidos: json, csv, prometheus

@@ -1,6 +1,6 @@
 
 
-#include "alertas/gestor_alertas.hpp" // O la ruta exacta donde esté gestor_alertas.hpp
+#include "alertas/gestor_alertas.hpp"
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -131,6 +131,50 @@ std::string output = formatter->formatear(snapshot);
     return 0;
 }
 
+/**
+ * @brief Convierte el Snapshot del sampler (lista de métricas) al
+ *        MetricSnapshot que evalúa GestorAlertas.
+ *
+ * CPU llega en porcentaje. Disco y RAM llegan en bytes, así que se
+ * convierten a porcentaje para poder compararlos con los umbrales.
+ */
+static pulso::MetricSnapshot construirMetricSnapshot(
+    const pulso::core::Snapshot& snap)
+{
+    pulso::MetricSnapshot ms;
+
+    double discoUsado = 0.0;
+    double discoTotal = 0.0;
+
+    for (const auto& m : snap.metricas) {
+        if (m.nombre == "cpu.usage") {
+            ms.cpu = m.valor;
+        } else if (m.nombre == "disk.used") {
+            discoUsado = m.valor;
+        } else if (m.nombre == "disk.total") {
+            discoTotal = m.valor;
+        }
+    }
+
+    if (discoTotal > 0.0) {
+        ms.disk = discoUsado / discoTotal * 100.0;
+    }
+
+    // La métrica "memory.used" no trae el total, así que se consulta aparte.
+    try {
+        const auto ram = pulso::collectors::memory::getRamUsage();
+        if (ram.total > 0) {
+            ms.ram = static_cast<double>(ram.used) /
+                     static_cast<double>(ram.total) * 100.0;
+        }
+    } catch (const std::exception&) {
+        // Si no se puede leer la RAM, queda en 0 y no dispara alerta.
+    }
+
+    return ms;
+}
+
+
 // ============================================
 // MAIN
 // ============================================
@@ -239,30 +283,37 @@ int main(int argc, char* argv[]) {
     pulso::storage::Storage storage(cfg.storage.ruta_db);
     pulso::storage::inicializarEsquema(storage);
     
-    // Instanciar GestorAlertas con la configuración de umbrales
-    pulso::alertas::GestorAlertas gestorAlertas(
-        cfg.umbrales.cpu_max,
-        cfg.umbrales.ram_max,
-        cfg.umbrales.disco_max
-    );
+    
+    // Gestor de alertas con umbrales leídos desde pulso.toml
+    pulso::alertas::GestorAlertas gestorAlertas;
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "cpu", static_cast<float>(cfg.umbrales.cpu_max), '>'));
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "ram", static_cast<float>(cfg.umbrales.ram_max), '>'));
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "disk", static_cast<float>(cfg.umbrales.disco_max), '>'));
 
-    log.info("GestorAlertas activo -> Umbrales: CPU=" + 
-             std::to_string(cfg.umbrales.cpu_max) + "%, RAM=" + 
-             std::to_string(cfg.umbrales.ram_max) + "%, Disco=" + 
+    // Cuando una alerta se dispara, queda registrada en el log
+    gestorAlertas.setCallback([](const std::string& mensaje) {
+        pulso::utils::logging::Logger::instancia().warn(mensaje);
+    });
+
+    log.info("GestorAlertas activo -> Umbrales: CPU=" +
+             std::to_string(cfg.umbrales.cpu_max) + "%, RAM=" +
+             std::to_string(cfg.umbrales.ram_max) + "%, Disco=" +
              std::to_string(cfg.umbrales.disco_max) + "%");
 
-
-    // Gestor de Alertas
-    pulso::alertas::GestorAlertas gestor_alertas(cfg.umbrales);
-
-    // Sampler (bucle infinito de coleccion)
+    // Sampler (bucle de colección); en cada ciclo evalúa las alertas
     pulso::sampler::Sampler sampler(
         collectors,
         storage,
-        cfg.sampler.intervalo_segundos
-        gestor_alertas
+        cfg.sampler.intervalo_segundos,
+        [&gestorAlertas](const pulso::core::Snapshot& snap) {
+            gestorAlertas.evaluar(construirMetricSnapshot(snap));
+        }
     );
     sampler.iniciar();
+
 
     // Signal handler
     setupSignalHandler();
