@@ -1,7 +1,6 @@
 #include "handler_alerts.hpp"
 #include "pulso/alertas/alerta_umbral.hpp"
 #include "pulso/core/metrics.hpp"
-#include <SQLiteCpp/SQLiteCpp.h>
 #include <sstream>
 #include <vector>
 
@@ -46,52 +45,6 @@ std::string handleAlerts(const pulso::GestorAlertas& gestor, const pulso::Metric
     }
     json << "]\n}";
 
-    return json.str();
-}
-
-std::string handleAlertsHistory(SQLite::Database& db, int limit, int offset) {
-    std::ostringstream json;
-    json << "{\n  \"history\": [";
-
-    try {
-        SQLite::Statement query(db,
-            "SELECT timestamp, metrica, umbral, valor, mensaje "
-            "FROM alerts ORDER BY timestamp DESC LIMIT ? OFFSET ?"
-        );
-
-        query.bind(1, limit);
-        query.bind(2, offset);
-
-        bool primera = true;
-        while (query.executeStep()) {
-            if (!primera) {
-                json << ",";
-            }
-            primera = false;
-
-            long long timestamp = query.getColumn(0).getInt64();
-            std::string metrica = query.getColumn(1).getText();
-            double umbral = query.getColumn(2).getDouble();
-            double valor = query.getColumn(3).getDouble();
-            std::string mensaje = query.getColumn(4).getText();
-
-            json << "\n    {\n"
-                 << "      \"timestamp\": " << timestamp << ",\n"
-                 << "      \"metrica\": \"" << metrica << "\",\n"
-                 << "      \"umbral\": " << umbral << ",\n"
-                 << "      \"valor\": " << valor << ",\n"
-                 << "      \"mensaje\": \"" << mensaje << "\"\n"
-                 << "    }";
-        }
-
-        if (!primera) {
-            json << "\n  ";
-        }
-    } catch (const std::exception& e) {
-        // En caso de error de base de datos, devuelve una lista vacía o maneja la excepción
-    }
-
-    json << "]\n}";
     return json.str();
 }
 

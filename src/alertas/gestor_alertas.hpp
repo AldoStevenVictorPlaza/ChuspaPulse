@@ -29,7 +29,7 @@ public:
     std::size_t cantidadAlertas() const;
 
     // Método que requiere la API para GET /alerts/history
-    std::vector<RegistroAlerta> obtenerHistorial() const;
+    std::vector<RegistroAlerta> obtenerHistorial(std::size_t limite = 100, std::size_t offset = 0) const;
 
 private:
     SQLite::Database* db_{nullptr};

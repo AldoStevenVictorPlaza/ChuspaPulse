@@ -54,14 +54,17 @@ std::size_t GestorAlertas::cantidadAlertas() const {
 }
 
 
-std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial() const {
+std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, std::size_t offset) const {
     std::vector<RegistroAlerta> historial;
     if (!db_) return historial;
 
     try {
-        SQLite::Statement query(*db_, 
-            "SELECT id, timestamp, metrica, umbral, valor, mensaje FROM alerts ORDER BY id DESC"
+        SQLite::Statement query(*db_,
+            "SELECT id, timestamp, metrica, umbral, valor, mensaje FROM alerts "
+            "ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?"
         );
+        query.bind(1, static_cast<long long>(limite));
+        query.bind(2, static_cast<long long>(offset));
 
         while (query.executeStep()) {
             RegistroAlerta reg;

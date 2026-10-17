@@ -79,4 +79,3 @@ id_rsa.pub
 .cmake/
 *.db
 *.sqlite
-!src/core/version.hpp

@@ -1,20 +1,3 @@
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/core/version.hpp")
-    file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/core")
-    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/core/version.hpp"
-"#ifndef CORE_VERSION_HPP
-#define CORE_VERSION_HPP
-
-#include <string>
-
-namespace pulso {
-    const std::string APP_VERSION = \"0.1.0\";
-}
-
-#endif
-")
-endif()
-
-
 add_executable(pulso main.cpp)
 
 target_sources(pulso PRIVATE
@@ -36,7 +19,8 @@ target_sources(pulso PRIVATE
     formatters/formatter_text.cpp
     formatters/formatter_prometheus.cpp
     http/handler_health.cpp
-    http/handler_history.cpp
+    http/handler_history.cpp    
+    http/handler_alerts_history.cpp
     http/handler_metrics.cpp
     platform/linux/collector_cpu.cpp
     storage/schema.cpp

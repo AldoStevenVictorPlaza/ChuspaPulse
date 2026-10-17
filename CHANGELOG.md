@@ -8,7 +8,6 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 ## [v0.1.0] - 2026-08-30
 
 ### Añadido
-- Persistencia de historial de alertas en SQLite y endpoint GET /alerts/history (#839)
 - fix(http): activar endpoint GET /config (#833)
 - Documentación inicial del proyecto
 - Organización inicial de directorios
@@ -25,5 +24,10 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 ## [0.1.0] - 2026-04-22
 
 ### Añadido
+
+* Inicio del proyecto Pulso
+* Creación del repositorio
+* 
+
 - Inicio del proyecto Pulso
 - Creación del repositorio

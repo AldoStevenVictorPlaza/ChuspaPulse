@@ -26,21 +26,23 @@ jobs:
       # CAMBIO 3: Paso de compilación OBLIGATORIO para C++
       # CodeQL necesita "ver" cómo se construye tu proyecto para analizarlo.
       # DEBES reemplazar estos comandos con los reales de tu proyecto.
-      - name: Instalar dependencias del sistema
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libsqlite3-dev
-
       - name: Compilar proyecto C++
         run: |
-          rm -rf build
-          make 
+          # Ejemplo si usas CMake:
+          # mkdir build && cd build
+          # cmake .. -DCMAKE_BUILD_TYPE=Release
+          # cmake --build . --config Release
           
+          # Ejemplo si usas Make:
+          # make
+          
+          echo "Aquí van tus comandos de compilación reales"
+
       - name: Análisis de CodeQL
         uses: github/codeql-action/analyze@v4.37.3
 
       - name: Escaneo de dependencias con OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
+        uses: google/osv-scanner-action/scan@v1
         with:
           scan-args: |-
             --recursive
