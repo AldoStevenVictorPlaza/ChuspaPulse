@@ -52,7 +52,7 @@ void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
                     query.bind(4, valorDeMetrica(alerta.metrica(), snap));
                     query.bind(5, alerta.mensaje());
                     query.exec();
-                } catch (const std::exception&) {
+                } catch (const std::exception& e) {
                     // Un fallo de la BD no debe tumbar el hilo del sampler
                     if (callback_) {
                         callback_(std::string("No se pudo guardar la alerta: ") + e.what());
@@ -90,7 +90,7 @@ std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, 
             reg.mensaje = query.getColumn(5).getText();
             historial.push_back(reg);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         // En caso de que la tabla aún no exista
     }
 
