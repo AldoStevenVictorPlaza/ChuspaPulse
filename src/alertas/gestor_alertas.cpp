@@ -13,6 +13,7 @@ double valorDeMetrica(const std::string& metrica, const pulso::MetricSnapshot& s
     return 0.0;
 }
 } // namespace
+
 GestorAlertas::GestorAlertas(SQLite::Database& db) : db_(&db) {}
 
 void GestorAlertas::addAlerta(const AlertaUmbral& alerta) {
@@ -34,9 +35,7 @@ void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
             if (callback_) {
                 callback_(alerta.mensaje());
             }
-
-            // 2. Persistir alerta en SQLite si la BD está configurada
-                        // 2. Persistir la alerta en SQLite si la BD está configurada
+            // 2. Persistir la alerta en SQLite si la BD está configurada
             if (db_) {
                 try {
                     const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
@@ -53,7 +52,7 @@ void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
                     query.bind(4, valorDeMetrica(alerta.metrica(), snap));
                     query.bind(5, alerta.mensaje());
                     query.exec();
-                } catch (const std::exception& e) {
+                } catch (const std::exception&) {
                     // Un fallo de la BD no debe tumbar el hilo del sampler
                     if (callback_) {
                         callback_(std::string("No se pudo guardar la alerta: ") + e.what());
