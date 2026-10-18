@@ -128,6 +128,8 @@ target_link_libraries(test_alerts_integration PRIVATE
     GTest::gtest_main
     httplib
     Threads::Threads
+    SQLiteCpp
+    sqlite3
 )
 gtest_discover_tests(test_alerts_integration)
 add_executable(test_alertas_persistencia
