@@ -48,6 +48,11 @@ public:
      */
     std::size_t cantidadAlertas() const;
 
+    /**
+     * @brief Devuelve las alertas registradas.
+     */
+    const std::vector<AlertaUmbral>& getAlertas() const;
+
 private:
     std::vector<AlertaUmbral> alertas_;
     std::function<void(const std::string&)> callback_;

@@ -33,4 +33,7 @@ std::size_t GestorAlertas::cantidadAlertas() const {
     return alertas_.size();
 }
 
+const std::vector<AlertaUmbral>& GestorAlertas::getAlertas() const {
+    return alertas_;
+}
 } // namespace pulso::alertas

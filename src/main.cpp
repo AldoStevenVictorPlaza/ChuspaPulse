@@ -1,5 +1,4 @@
-
-
+#include "http/handler_alerts.hpp"
 #include "alertas/gestor_alertas.hpp"
 #include <iostream>
 #include <memory>
@@ -174,7 +173,6 @@ static pulso::MetricSnapshot construirMetricSnapshot(
     return ms;
 }
 
-
 // ============================================
 // MAIN
 // ============================================
@@ -282,8 +280,8 @@ int main(int argc, char* argv[]) {
     // Abrir base de datos e inicializar esquema
     pulso::storage::Storage storage(cfg.storage.ruta_db);
     pulso::storage::inicializarEsquema(storage);
-    
-    
+
+
     // Gestor de alertas con umbrales leídos desde pulso.toml
     pulso::alertas::GestorAlertas gestorAlertas;
     gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
@@ -335,10 +333,10 @@ int main(int argc, char* argv[]) {
         );
     });
 
-    // GET /version 
+    // GET /version
 server.Get("/version", [](
     const httplib::Request&,
-    httplib::Response& res) 
+    httplib::Response& res)
 {
     res.set_content(
         pulso::http::handleVersion(),
@@ -346,6 +344,24 @@ server.Get("/version", [](
     );
 });
 server.Get("/config", handle_config);
+
+    // GET /alerts
+    server.Get("/alerts", [&storage, &gestorAlertas](
+        const httplib::Request&,
+        httplib::Response& res)
+    {
+        pulso::MetricSnapshot snap;  // en ceros si todavía no hay datos
+        if (auto ultimo = storage.last()) {
+            snap = construirMetricSnapshot(*ultimo);
+        }
+
+        res.status = 200;
+        res.set_content(
+            pulso::http::handleAlerts(gestorAlertas, snap),
+            "application/json"
+        );
+    });
+
 
     // GET /metrics — pendiente hasta que SystemMonitor se adapte al flujo
     // actual (Storage + ICollector). Ver issue #270.
