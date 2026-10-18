@@ -1,17 +1,21 @@
 #pragma once
 
-#include <string>
+#include <httplib.h>
 
-namespace pulso {
-    class MetricsSnapshot;
-    class GestorAlertas;
-}
+#include "../alertas/gestor_alertas.hpp"
 
 namespace pulso::http {
 
 /**
- * @brief Genera una respuesta JSON para el endpoint GET /alerts con las alertas activas.
+ * @brief Registra el endpoint GET /alerts/history.
+ *
+ * Devuelve el historial de alertas persistido, ordenado por timestamp
+ * descendente, con paginación básica mediante los parámetros opcionales
+ * `limite` (1 a 1000, por defecto 100) y `offset` (0 o más, por defecto 0).
+ * Responde 400 si algún parámetro es inválido.
  */
-std::string handleAlerts(const pulso::GestorAlertas& gestor, const pulso::MetricsSnapshot& snap);
+void registrarAlertsHistory(
+    httplib::Server& servidor,
+    const pulso::alertas::GestorAlertas& gestor);
 
 } // namespace pulso::http

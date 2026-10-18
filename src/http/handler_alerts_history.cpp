@@ -1,51 +1,61 @@
-#include "handler_alerts.hpp"
-#include "pulso/alertas/alerta_umbral.hpp"
-#include "pulso/core/metrics.hpp"
-#include <sstream>
-#include <vector>
+#include "handler_alerts_history.hpp"
+
+#include <cstddef>
+#include <nlohmann/json.hpp>
+#include <string>
 
 namespace pulso::http {
 
-static double obtenerValorMetrica(const std::string& metrica, const pulso::MetricsSnapshot& snap) {
-    if (metrica == "cpu" || metrica == "cpu.usage_pct") return snap.cpu;
-    if (metrica == "ram") return snap.ram;
-    if (metrica == "disk") return snap.disk;
-    if (metrica == "rx_bytes") return snap.rx_bytes;
-    if (metrica == "tx_bytes") return snap.tx_bytes;
-    return 0.0;
-}
+void registrarAlertsHistory(
+    httplib::Server& servidor,
+    const pulso::alertas::GestorAlertas& gestor)
+{
+    servidor.Get("/alerts/history",
+        [&gestor](const httplib::Request& req, httplib::Response& res)
+    {
+        try {
+            int limite = 100;
+            int offset = 0;
 
-std::string handleAlerts(const pulso::GestorAlertas& gestor, const pulso::MetricsSnapshot& snap) {
-    std::ostringstream json;
-    json << "{\n  \"alerts\": [";
-
-    bool primera = true;
-    
-    for (const auto& alerta : gestor.getAlertas()) {
-        if (alerta.evaluar(snap)) {
-            if (!primera) {
-                json << ",";
+            if (req.has_param("limite")) {
+                limite = std::stoi(req.get_param_value("limite"));
             }
-            primera = false;
+            if (req.has_param("offset")) {
+                offset = std::stoi(req.get_param_value("offset"));
+            }
 
-            double valor_actual = obtenerValorMetrica(alerta.metrica(), snap);
+            if (limite < 1 || limite > 1000 || offset < 0) {
+                res.status = 400;
+                res.set_content(
+                    R"({"error":"parametros invalidos"})",
+                    "application/json");
+                return;
+            }
 
-            json << "\n    {\n"
-                 << "      \"metrica\": \"" << alerta.metrica() << "\",\n"
-                 << "      \"umbral\": " << alerta.umbral() << ",\n"
-                 << "      \"operador\": \"" << alerta.operador() << "\",\n"
-                 << "      \"valor_actual\": " << valor_actual << ",\n"
-                 << "      \"mensaje\": \"" << alerta.mensaje() << "\"\n"
-                 << "    }";
+            auto json = nlohmann::json::array();
+            for (const auto& r : gestor.obtenerHistorial(
+                     static_cast<std::size_t>(limite),
+                     static_cast<std::size_t>(offset))) {
+                json.push_back({
+                    {"id", r.id},
+                    {"timestamp", r.timestamp},
+                    {"metrica", r.metrica},
+                    {"umbral", r.umbral},
+                    {"valor", r.valor},
+                    {"mensaje", r.mensaje}
+                });
+            }
+
+            res.status = 200;
+            res.set_content(json.dump(), "application/json");
         }
-    }
-
-    if (!primera) {
-        json << "\n  ";
-    }
-    json << "]\n}";
-
-    return json.str();
+        catch (const std::exception&) {
+            res.status = 400;
+            res.set_content(
+                R"({"error":"parametros invalidos"})",
+                "application/json");
+        }
+    });
 }
 
 } // namespace pulso::http

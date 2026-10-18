@@ -2,7 +2,17 @@
 #include <chrono>
 
 namespace pulso::alertas {
-
+namespace {
+// Valor actual de la métrica que evalúa una alerta.
+double valorDeMetrica(const std::string& metrica, const pulso::MetricSnapshot& snap) {
+    if (metrica == "cpu" || metrica == "cpu.usage_pct") return snap.cpu;
+    if (metrica == "ram") return snap.ram;
+    if (metrica == "disk") return snap.disk;
+    if (metrica == "rx_bytes") return snap.rx_bytes;
+    if (metrica == "tx_bytes") return snap.tx_bytes;
+    return 0.0;
+}
+} // namespace
 GestorAlertas::GestorAlertas(SQLite::Database& db) : db_(&db) {}
 
 void GestorAlertas::addAlerta(const AlertaUmbral& alerta) {
@@ -26,24 +36,29 @@ void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
             }
 
             // 2. Persistir alerta en SQLite si la BD está configurada
+                        // 2. Persistir la alerta en SQLite si la BD está configurada
             if (db_) {
-                auto now = std::chrono::system_clock::now();
-                auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
-                    now.time_since_epoch()
-                ).count();
+                try {
+                    const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
 
-                SQLite::Statement query(*db_, 
-                    "INSERT INTO alerts (timestamp, metrica, umbral, valor, mensaje) "
-                    "VALUES (?, ?, ?, ?, ?)"
-                );
-
-                query.bind(1, static_cast<long long>(timestamp));
-                query.bind(2, snap.nombre);
-                query.bind(3, alerta.umbral());
-                query.bind(4, snap.valor);
-                query.bind(5, alerta.mensaje());
-
-                query.exec();
+                    SQLite::Statement query(*db_,
+                        "INSERT INTO alerts (timestamp, metrica, umbral, valor, mensaje) "
+                        "VALUES (?, ?, ?, ?, ?)"
+                    );
+                    query.bind(1, static_cast<std::int64_t>(timestamp));
+                    query.bind(2, alerta.metrica());
+                    query.bind(3, static_cast<double>(alerta.umbral()));
+                    query.bind(4, valorDeMetrica(alerta.metrica(), snap));
+                    query.bind(5, alerta.mensaje());
+                    query.exec();
+                } catch (const std::exception& e) {
+                    // Un fallo de la BD no debe tumbar el hilo del sampler
+                    if (callback_) {
+                        callback_(std::string("No se pudo guardar la alerta: ") + e.what());
+                    }
+                }
             }
         }
     }
@@ -63,8 +78,8 @@ std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, 
             "SELECT id, timestamp, metrica, umbral, valor, mensaje FROM alerts "
             "ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?"
         );
-        query.bind(1, static_cast<long long>(limite));
-        query.bind(2, static_cast<long long>(offset));
+        query.bind(1, static_cast<std::int64_t>(limite));
+        query.bind(2, static_cast<std::int64_t>(offset));
 
         while (query.executeStep()) {
             RegistroAlerta reg;

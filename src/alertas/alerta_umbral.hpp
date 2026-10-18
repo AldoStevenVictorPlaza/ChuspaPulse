@@ -36,6 +36,12 @@ public:
      * @return Cadena con el nombre de la métrica, el operador y el umbral.
      */
     std::string mensaje() const;
+    /// Nombre de la métrica que evalúa esta alerta.
+    const std::string& metrica() const { return metrica_; }
+    /// Valor umbral de referencia.
+    float umbral() const { return umbral_; }
+    /// Operador de comparación ('>' o '<').
+    char operador() const { return operador_; }
 
 private:
     std::string metrica_;  ///< Nombre de la métrica a evaluar
