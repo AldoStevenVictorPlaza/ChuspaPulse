@@ -9,6 +9,7 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 
 ### Añadido
 - fix(http): activar endpoint GET /config (#833)
+- fix(collectors): instanciar collectors de procesos, loadavg, uptime y temperatura (#825)
 - Documentación inicial del proyecto
 - Organización inicial de directorios
 - Configuración base del sistema
@@ -20,6 +21,7 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 - feat(formatter): implementar formateador compatible con la exposición de métricas de Prometheus.
 - feat(storage): agregar módulo de almacenamiento persistente local para las métricas recolectadas.
 - feat(http): implementar handlers HTTP para la exposición de endpoints del servidor de monitoreo.
+- Persistencia del historial de alertas en SQLite y endpoint GET /alerts/history (#839)
 
 ## [0.1.0] - 2026-04-22
 

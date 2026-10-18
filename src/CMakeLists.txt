@@ -8,6 +8,7 @@ target_sources(pulso PRIVATE
     collectors/memory/ram_usage.cpp
     collectors/network/network_io.cpp
     collectors/network/net_usage.cpp
+    collectors/uptime/uptime_collector.cpp
     collectors/loadavg/loadavg_collector.cpp
     collectors/procesos/proc_collector.cpp
     collectors/procesos/top_procesos.cpp
@@ -20,6 +21,7 @@ target_sources(pulso PRIVATE
     formatters/formatter_prometheus.cpp
     http/handler_health.cpp
     http/handler_history.cpp
+    http/handler_alerts_history.cpp
     http/handler_metrics.cpp
     platform/linux/collector_cpu.cpp
     storage/schema.cpp
