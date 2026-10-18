@@ -97,4 +97,3 @@ std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, 
     return historial;
 }
 } // namespace pulso::alertas
-
