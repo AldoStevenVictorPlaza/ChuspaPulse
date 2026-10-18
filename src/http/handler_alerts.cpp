@@ -1,48 +1,73 @@
-#include "handler_alerts.hpp"
-#include "pulso/alertas/alerta_umbral.hpp"
-#include "pulso/core/metrics.hpp"
+#include "http/handler_alerts.hpp"
+
+#include <chrono>
+#include <ctime>
 #include <sstream>
-#include <vector>
+#include <stdexcept>
+
+#include "alertas/gestor_alertas.hpp"
+#include "core/MetricSnapshot.hpp"
 
 namespace pulso::http {
 
-static double obtenerValorMetrica(const std::string& metrica, const pulso::MetricsSnapshot& snap) {
-    if (metrica == "cpu" || metrica == "cpu.usage_pct") return snap.cpu;
-    if (metrica == "ram") return snap.ram;
-    if (metrica == "disk") return snap.disk;
-    if (metrica == "rx_bytes") return snap.rx_bytes;
-    if (metrica == "tx_bytes") return snap.tx_bytes;
-    return 0.0;
+namespace {
+
+std::string escaparJson(const std::string& texto) {
+    std::string salida;
+    for (char c : texto) {
+        if (c == '"' || c == '\\') salida += '\\';
+        salida += c;
+    }
+    return salida;
 }
 
-std::string handleAlerts(const pulso::GestorAlertas& gestor, const pulso::MetricsSnapshot& snap) {
+std::string formatearTimestamp(std::chrono::system_clock::time_point tp) {
+    std::time_t t = std::chrono::system_clock::to_time_t(tp);
+    std::tm tm_utc{};
+#ifdef _WIN32
+    gmtime_s(&tm_utc, &t);
+#else
+    gmtime_r(&t, &tm_utc);
+#endif
+    char buffer[32];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &tm_utc);
+    return buffer;
+}
+
+} // namespace
+
+std::string handleAlerts(const pulso::alertas::GestorAlertas& gestor,
+                         const pulso::MetricSnapshot& snap) {
+    const std::string timestamp = formatearTimestamp(snap.timestamp);
+
     std::ostringstream json;
     json << "{\n  \"alerts\": [";
 
     bool primera = true;
-    
+    int id = 0;
+
     for (const auto& alerta : gestor.getAlertas()) {
-        if (alerta.evaluar(snap)) {
-            if (!primera) {
-                json << ",";
-            }
-            primera = false;
+        ++id;
 
-            double valor_actual = obtenerValorMetrica(alerta.metrica(), snap);
-
-            json << "\n    {\n"
-                 << "      \"metrica\": \"" << alerta.metrica() << "\",\n"
-                 << "      \"umbral\": " << alerta.umbral() << ",\n"
-                 << "      \"operador\": \"" << alerta.operador() << "\",\n"
-                 << "      \"valor_actual\": " << valor_actual << ",\n"
-                 << "      \"mensaje\": \"" << alerta.mensaje() << "\"\n"
-                 << "    }";
+        bool activa = false;
+        try {
+            activa = alerta.evaluar(snap);
+        } catch (const std::invalid_argument&) {
+            continue;  // métrica desconocida: se ignora esa alerta
         }
+        if (!activa) continue;
+
+        if (!primera) json << ",";
+        primera = false;
+
+        json << "\n    {\n"
+             << "      \"id\": " << id << ",\n"
+             << "      \"message\": \"" << escaparJson(alerta.mensaje()) << "\",\n"
+             << "      \"timestamp\": \"" << timestamp << "\"\n"
+             << "    }";
     }
 
-    if (!primera) {
-        json << "\n  ";
-    }
+    if (!primera) json << "\n  ";
     json << "]\n}";
 
     return json.str();

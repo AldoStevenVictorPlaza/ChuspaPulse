@@ -22,7 +22,7 @@ target_link_libraries(test_types PRIVATE
     GTest::gtest_main
 )
 gtest_discover_tests(test_types)
- 
+
 add_executable(test_config
     test_config.cpp
 )
@@ -114,6 +114,24 @@ target_link_libraries(test_gestor_alertas PRIVATE
     GTest::gtest_main
 )
 gtest_discover_tests(test_gestor_alertas)
+add_executable(test_alerts_integration
+    automatizados/integration/test_alerts.cpp
+    ${PROJECT_SOURCE_DIR}/src/http/handler_alerts.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/gestor_alertas.cpp
+)
+target_include_directories(test_alerts_integration PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_alerts_integration PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    httplib
+    Threads::Threads
+    SQLiteCpp
+    sqlite3
+)
+gtest_discover_tests(test_alerts_integration)
 add_executable(test_alertas_persistencia
     automatizados/unit/test_alertas_persistencia.cpp
     ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp

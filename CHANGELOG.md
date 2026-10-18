@@ -10,6 +10,7 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 ### Añadido
 - fix(http): activar endpoint GET /config (#833)
 - fix(collectors): instanciar collectors de procesos, loadavg, uptime y temperatura (#825)
+- fix(http): activar endpoint GET /alerts (#837)
 - Documentación inicial del proyecto
 - Organización inicial de directorios
 - Configuración base del sistema
@@ -29,7 +30,7 @@ y este proyecto sigue el versionado [SemVer](https://semver.org/lang/es/).
 
 * Inicio del proyecto Pulso
 * Creación del repositorio
-* 
+*
 
 - Inicio del proyecto Pulso
 - Creación del repositorio

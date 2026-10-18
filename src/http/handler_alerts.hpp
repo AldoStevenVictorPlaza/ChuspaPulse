@@ -3,15 +3,16 @@
 #include <string>
 
 namespace pulso {
-    class MetricsSnapshot;
-    class GestorAlertas;
+    struct MetricSnapshot;
+    namespace alertas { class GestorAlertas; }
 }
 
 namespace pulso::http {
 
 /**
- * @brief Genera una respuesta JSON para el endpoint GET /alerts con las alertas activas.
+ * @brief Genera el JSON de GET /alerts con las alertas activas para el snapshot dado.
  */
-std::string handleAlerts(const pulso::GestorAlertas& gestor, const pulso::MetricsSnapshot& snap);
+std::string handleAlerts(const pulso::alertas::GestorAlertas& gestor,
+                         const pulso::MetricSnapshot& snap);
 
 } // namespace pulso::http

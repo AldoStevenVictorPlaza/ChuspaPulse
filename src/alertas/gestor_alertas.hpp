@@ -74,6 +74,10 @@ public:
     std::size_t cantidadAlertas() const;
 
     /**
+     * @brief Devuelve las alertas registradas.
+     */
+    const std::vector<AlertaUmbral>& getAlertas() const;
+     /**
      * @brief Devuelve el historial de alertas guardadas, de la más reciente
      *        a la más antigua (ordenado por timestamp).
      * @param limite Cantidad máxima de registros a devolver.
