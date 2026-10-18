@@ -1,48 +1,10 @@
 #include "gestor_alertas.hpp"
 
-namespace pulso::alertas {
-
-void GestorAlertas::addAlerta(const AlertaUmbral& alerta) {
-    alertas_.push_back(alerta);
-}
-
-void GestorAlertas::setCallback(std::function<void(const std::string&)> callback) {
-    callback_ = callback;
-}
-
-void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
-    // Si no hay callback registrado, no hacemos nada
-    if (!callback_) {
-        return;
-    }
-
-    // Si no hay alertas registradas, no hacemos nada
-    if (alertas_.empty()) {
-        return;
-    }
-
-    // Evaluar cada alerta y llamar callback solo para las que se disparan
-    for (const auto& alerta : alertas_) {
-        if (alerta.evaluar(snap)) {
-            callback_(alerta.mensaje());
-        }
-    }
-}
-
-std::size_t GestorAlertas::cantidadAlertas() const {
-    return alertas_.size();
-}
-
-const std::vector<AlertaUmbral>& GestorAlertas::getAlertas() const {
-    return alertas_;
-}
-} // namespace pulso::alertas
-#include "gestor_alertas.hpp"
 #include <chrono>
 
 namespace pulso::alertas {
 namespace {
-// Valor actual de la métrica que evalúa una alerta.
+
 double valorDeMetrica(const std::string& metrica, const pulso::MetricSnapshot& snap) {
     if (metrica == "cpu" || metrica == "cpu.usage_pct") return snap.cpu;
     if (metrica == "ram") return snap.ram;
@@ -51,6 +13,7 @@ double valorDeMetrica(const std::string& metrica, const pulso::MetricSnapshot& s
     if (metrica == "tx_bytes") return snap.tx_bytes;
     return 0.0;
 }
+
 } // namespace
 
 GestorAlertas::GestorAlertas(SQLite::Database& db) : db_(&db) {}
@@ -69,33 +32,33 @@ void GestorAlertas::evaluar(const pulso::MetricSnapshot& snap) const {
     }
 
     for (const auto& alerta : alertas_) {
-        if (alerta.evaluar(snap)) {
-            // 1. Ejecutar callback si existe
-            if (callback_) {
-                callback_(alerta.mensaje());
-            }
-            // 2. Persistir la alerta en SQLite si la BD está configurada
-            if (db_) {
-                try {
-                    const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
-                        std::chrono::system_clock::now().time_since_epoch()
-                    ).count();
+        if (!alerta.evaluar(snap)) {
+            continue;
+        }
 
-                    SQLite::Statement query(*db_,
-                        "INSERT INTO alerts (timestamp, metrica, umbral, valor, mensaje) "
-                        "VALUES (?, ?, ?, ?, ?)"
-                    );
-                    query.bind(1, static_cast<std::int64_t>(timestamp));
-                    query.bind(2, alerta.metrica());
-                    query.bind(3, static_cast<double>(alerta.umbral()));
-                    query.bind(4, valorDeMetrica(alerta.metrica(), snap));
-                    query.bind(5, alerta.mensaje());
-                    query.exec();
-                } catch (const std::exception& e) {
-                    // Un fallo de la BD no debe tumbar el hilo del sampler
-                    if (callback_) {
-                        callback_(std::string("No se pudo guardar la alerta: ") + e.what());
-                    }
+        if (callback_) {
+            callback_(alerta.mensaje());
+        }
+
+        if (db_) {
+            try {
+                const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+
+                SQLite::Statement query(*db_,
+                    "INSERT INTO alerts (timestamp, metrica, umbral, valor, mensaje) "
+                    "VALUES (?, ?, ?, ?, ?)"
+                );
+                query.bind(1, static_cast<std::int64_t>(timestamp));
+                query.bind(2, alerta.metrica());
+                query.bind(3, static_cast<double>(alerta.umbral()));
+                query.bind(4, valorDeMetrica(alerta.metrica(), snap));
+                query.bind(5, alerta.mensaje());
+                query.exec();
+            } catch (const std::exception& e) {
+                if (callback_) {
+                    callback_(std::string("No se pudo guardar la alerta: ") + e.what());
                 }
             }
         }
@@ -106,10 +69,16 @@ std::size_t GestorAlertas::cantidadAlertas() const {
     return alertas_.size();
 }
 
+const std::vector<AlertaUmbral>& GestorAlertas::getAlertas() const {
+    return alertas_;
+}
 
-std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, std::size_t offset) const {
+std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(
+    std::size_t limite, std::size_t offset) const {
     std::vector<RegistroAlerta> historial;
-    if (!db_) return historial;
+    if (!db_) {
+        return historial;
+    }
 
     try {
         SQLite::Statement query(*db_,
@@ -130,9 +99,10 @@ std::vector<RegistroAlerta> GestorAlertas::obtenerHistorial(std::size_t limite, 
             historial.push_back(reg);
         }
     } catch (const std::exception&) {
-        // En caso de que la tabla aún no exista
+        // En caso de que la tabla aún no exista.
     }
 
     return historial;
 }
+
 } // namespace pulso::alertas
