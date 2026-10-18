@@ -45,6 +45,7 @@
 #include "http/handler_config.hpp"
 #include "http/handler_health.hpp"
 #include "http/handler_history.hpp"
+#include "http/handler_alerts_history.hpp"
 #include "http/handler_metrics.hpp"
 #include "http/handler_prometheus.hpp"
 #include "http/handler_version.hpp"
@@ -377,7 +378,13 @@ int main(int argc, char* argv[]) {
     
     
     // Gestor de alertas con umbrales leídos desde pulso.toml
-    pulso::alertas::GestorAlertas gestorAlertas;
+        // Conexión propia a la misma base de datos para guardar y consultar alertas
+    SQLite::Database alertasDb(
+        cfg.storage.ruta_db,
+        SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE,
+        5000);  // espera hasta 5 s si el sampler está escribiendo
+    pulso::storage::inicializarEsquema(alertasDb);
+    pulso::alertas::GestorAlertas gestorAlertas(alertasDb);
     gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
         "cpu", static_cast<float>(cfg.umbrales.cpu_max), '>'));
     gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
@@ -448,6 +455,9 @@ server.Get("/config", handle_config);
 
     // GET /metrics/prometheus
     pulso::http::registrarPrometheus(server, storage);
+    // GET /alerts/history
+    pulso::http::registrarAlertsHistory(server, gestorAlertas);
+
 
     // Arrancar servidor HTTP en thread separado
     std::thread http_thread([&]() {

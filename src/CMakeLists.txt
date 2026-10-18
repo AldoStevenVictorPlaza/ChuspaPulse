@@ -21,6 +21,7 @@ target_sources(pulso PRIVATE
     formatters/formatter_prometheus.cpp
     http/handler_health.cpp
     http/handler_history.cpp
+    http/handler_alerts_history.cpp
     http/handler_metrics.cpp
     platform/linux/collector_cpu.cpp
     storage/schema.cpp

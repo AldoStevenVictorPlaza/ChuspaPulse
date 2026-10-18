@@ -108,7 +108,19 @@ target_include_directories(test_gestor_alertas PRIVATE
     ${PROJECT_SOURCE_DIR}/src
 )
 target_link_libraries(test_gestor_alertas PRIVATE
+    SQLiteCpp
+    sqlite3
     GTest::gtest
     GTest::gtest_main
 )
 gtest_discover_tests(test_gestor_alertas)
+add_executable(test_alertas_persistencia
+    automatizados/unit/test_alertas_persistencia.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/gestor_alertas.cpp
+    ${PROJECT_SOURCE_DIR}/src/storage/schema.cpp
+)
+target_include_directories(test_alertas_persistencia PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(test_alertas_persistencia PRIVATE
+    SQLiteCpp sqlite3 GTest::gtest GTest::gtest_main)
+gtest_discover_tests(test_alertas_persistencia)
