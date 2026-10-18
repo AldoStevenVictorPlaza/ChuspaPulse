@@ -28,6 +28,10 @@
 #include "collectors/disk/disk_usage.h"
 #include "collectors/network/net_usage.h"
 #include "platform/linux/collector_cpu.hpp"
+#include "collectors/procesos/proc_collector.h"
+#include "collectors/loadavg/loadavg_collector.h"
+#include "collectors/uptime/uptime_collector.h"
+#include "collectors/temperatura/temp_collector.h"
 
 // Sampler
 #include "sampler/sampler.hpp"
@@ -54,6 +58,78 @@
 // Signal handler
 extern std::atomic<bool> isRunning;
 void setupSignalHandler();
+class CollectorProcesos : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "procesos";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        pulso::collectors::ProcInfo info = pulso::collectors::getProcInfo();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"procesos.running", static_cast<double>(info.running), "cantidad", ts},
+            {"procesos.blocked", static_cast<double>(info.blocked), "cantidad", ts},
+            {"procesos.total", static_cast<double>(info.total), "cantidad", ts}
+        };
+    }
+};
+
+class CollectorLoadAvg : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "loadavg";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        LoadAvgInfo info = getLoadAverage();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"loadavg.1", static_cast<double>(info.load1), "carga", ts},
+            {"loadavg.5", static_cast<double>(info.load5), "carga", ts},
+            {"loadavg.15", static_cast<double>(info.load15), "carga", ts}
+        };
+    }
+};
+
+class CollectorUptime : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "uptime";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        UptimeInfo info = getUptime();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"uptime.seconds", static_cast<double>(info.total_seconds), "segundos", ts}
+        };
+    }
+};
+
+class CollectorTemperatura : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "temperatura";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        ::collectors::TempInfo info = ::collectors::getTempInfo();
+
+        if (!info.disponible) {
+            return {};
+        }
+
+        auto ts = std::time(nullptr);
+
+        return {
+            {"temperatura.cpu", static_cast<double>(info.cpu_celsius), "celsius", ts}
+        };
+    }
+};
 
 // ============================================
 // NUEVO: Funcion helper para modo once
@@ -263,6 +339,22 @@ int main(int argc, char* argv[]) {
     collectors.push_back(
         std::make_shared<pulso::collectors::network::NetworkCollector>()
     );
+    collectors.push_back(
+        std::make_shared<CollectorProcesos>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorLoadAvg>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorUptime>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorTemperatura>()
+    );
+
 
     // =========================================================================
     // MODO ONCE
