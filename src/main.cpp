@@ -62,7 +62,7 @@ public:
     }
 
     std::vector<pulso::core::Metrica> recolectar() override {
-        ProcInfo info = getProcInfo();
+        pulso::collectors::ProcInfo info = pulso::collectors::getProcInfo();
         auto ts = std::time(nullptr);
 
         return {
@@ -114,7 +114,7 @@ public:
     }
 
     std::vector<pulso::core::Metrica> recolectar() override {
-        TempInfo info = getTempInfo();
+        ::collectors::TempInfo info = ::collectors::getTempInfo();
 
         if (!info.disponible) {
             return {};
