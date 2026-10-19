@@ -1,6 +1,9 @@
-# Archivo de configuración del agente pulso
+﻿# Archivo de configuración del agente pulso
 # Todas las opciones tienen valores por defecto; este archivo muestra los valores
 # explícitos para fines de documentación.
+
+# Nivel de log: debug, info, warn, error
+nivel_log = "info"
 
 [servidor]
 # Dirección IP en la que escucha el servidor HTTP.
@@ -20,5 +23,7 @@ intervalo_segundos = 10
 # Puede ser relativa al directorio de ejecución o absoluta.
 ruta_db = "pulso.db"
 
-# Nivel de log: debug, info, warn, error
-nivel_log = "info"
+[umbrales]
+cpu_max = 80.0
+ram_max = 85.0
+disco_max = 90.0

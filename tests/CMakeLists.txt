@@ -22,7 +22,7 @@ target_link_libraries(test_types PRIVATE
     GTest::gtest_main
 )
 gtest_discover_tests(test_types)
- 
+
 add_executable(test_config
     test_config.cpp
 )
@@ -86,3 +86,59 @@ target_link_libraries(test_ram_usage PRIVATE
     GTest::gtest_main
 )
 gtest_discover_tests(test_ram_usage)
+add_executable(test_alerta_umbral
+    automatizados/unit/test_alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+)
+target_include_directories(test_alerta_umbral PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_alerta_umbral PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+gtest_discover_tests(test_alerta_umbral)
+
+add_executable(test_gestor_alertas
+    automatizados/unit/test_gestor_alertas.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/gestor_alertas.cpp
+)
+target_include_directories(test_gestor_alertas PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_gestor_alertas PRIVATE
+    SQLiteCpp
+    sqlite3
+    GTest::gtest
+    GTest::gtest_main
+)
+gtest_discover_tests(test_gestor_alertas)
+add_executable(test_alerts_integration
+    automatizados/integration/test_alerts.cpp
+    ${PROJECT_SOURCE_DIR}/src/http/handler_alerts.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/gestor_alertas.cpp
+)
+target_include_directories(test_alerts_integration PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_alerts_integration PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    httplib
+    Threads::Threads
+    SQLiteCpp
+    sqlite3
+)
+gtest_discover_tests(test_alerts_integration)
+add_executable(test_alertas_persistencia
+    automatizados/unit/test_alertas_persistencia.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/alerta_umbral.cpp
+    ${PROJECT_SOURCE_DIR}/src/alertas/gestor_alertas.cpp
+    ${PROJECT_SOURCE_DIR}/src/storage/schema.cpp
+)
+target_include_directories(test_alertas_persistencia PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(test_alertas_persistencia PRIVATE
+    SQLiteCpp sqlite3 GTest::gtest GTest::gtest_main)
+gtest_discover_tests(test_alertas_persistencia)

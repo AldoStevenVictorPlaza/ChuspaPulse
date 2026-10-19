@@ -8,6 +8,7 @@ target_sources(pulso PRIVATE
     collectors/memory/ram_usage.cpp
     collectors/network/network_io.cpp
     collectors/network/net_usage.cpp
+    collectors/uptime/uptime_collector.cpp
     collectors/loadavg/loadavg_collector.cpp
     collectors/procesos/proc_collector.cpp
     collectors/procesos/top_procesos.cpp
@@ -18,9 +19,9 @@ target_sources(pulso PRIVATE
     formatters/formatter_csv.cpp
     formatters/formatter_text.cpp
     formatters/formatter_prometheus.cpp
-    formatters/formatter_text.cpp
     http/handler_health.cpp
     http/handler_history.cpp
+    http/handler_alerts_history.cpp
     http/handler_metrics.cpp
     platform/linux/collector_cpu.cpp
     storage/schema.cpp
@@ -29,9 +30,12 @@ target_sources(pulso PRIVATE
     utils/formato_bytes.cpp
     utils/logging/logger.cpp
     utils/signal_handler.cpp
-    src/core/version.hpp
-    src/http/handler_version.hpp
-    src/http/handler_version.cpp
+    core/version.hpp
+    http/handler_version.hpp
+    http/handler_version.cpp
+    http/handler_alerts.cpp
+    alertas/alerta_umbral.cpp
+    alertas/gestor_alertas.cpp
 )
 
 # Collector de CPU para Windows: solo se compila en plataforma WIN32.
@@ -39,6 +43,7 @@ target_sources(pulso PRIVATE
 if(WIN32)
     target_sources(pulso PRIVATE
         platform/windows/collector_cpu.cpp
+        platform/windows/uptime_collector.cpp
     )
 endif()
 

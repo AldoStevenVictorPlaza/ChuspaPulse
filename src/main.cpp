@@ -1,3 +1,5 @@
+#include "http/handler_alerts.hpp"
+#include "alertas/gestor_alertas.hpp"
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -22,9 +24,13 @@
 // Collectors
 #include "collectors/memory/ram_usage.hpp"
 #include "collectors/bateria/bateria_collector.hpp"
+#include "collectors/disk/disk_usage.h"
+#include "collectors/network/net_usage.h"
 #include "platform/linux/collector_cpu.hpp"
-// TODO: CollectorDisk y CollectorNetwork no implementan ICollector aún.
-//       Pendiente en issue separado.
+#include "collectors/procesos/proc_collector.h"
+#include "collectors/loadavg/loadavg_collector.h"
+#include "collectors/uptime/uptime_collector.h"
+#include "collectors/temperatura/temp_collector.h"
 
 // Sampler
 #include "sampler/sampler.hpp"
@@ -35,8 +41,10 @@
 #include "formatters/formatter_prometheus.hpp"
 
 // HTTP handlers
+#include "http/handler_config.hpp"
 #include "http/handler_health.hpp"
 #include "http/handler_history.hpp"
+#include "http/handler_alerts_history.hpp"
 #include "http/handler_metrics.hpp"
 #include "http/handler_prometheus.hpp"
 #include "http/handler_version.hpp"
@@ -50,6 +58,78 @@
 // Signal handler
 extern std::atomic<bool> isRunning;
 void setupSignalHandler();
+class CollectorProcesos : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "procesos";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        pulso::collectors::ProcInfo info = pulso::collectors::getProcInfo();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"procesos.running", static_cast<double>(info.running), "cantidad", ts},
+            {"procesos.blocked", static_cast<double>(info.blocked), "cantidad", ts},
+            {"procesos.total", static_cast<double>(info.total), "cantidad", ts}
+        };
+    }
+};
+
+class CollectorLoadAvg : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "loadavg";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        LoadAvgInfo info = getLoadAverage();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"loadavg.1", static_cast<double>(info.load1), "carga", ts},
+            {"loadavg.5", static_cast<double>(info.load5), "carga", ts},
+            {"loadavg.15", static_cast<double>(info.load15), "carga", ts}
+        };
+    }
+};
+
+class CollectorUptime : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "uptime";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        UptimeInfo info = getUptime();
+        auto ts = std::time(nullptr);
+
+        return {
+            {"uptime.seconds", static_cast<double>(info.total_seconds), "segundos", ts}
+        };
+    }
+};
+
+class CollectorTemperatura : public pulso::collectors::ICollector {
+public:
+    std::string nombre() const override {
+        return "temperatura";
+    }
+
+    std::vector<pulso::core::Metrica> recolectar() override {
+        ::collectors::TempInfo info = ::collectors::getTempInfo();
+
+        if (!info.disponible) {
+            return {};
+        }
+
+        auto ts = std::time(nullptr);
+
+        return {
+            {"temperatura.cpu", static_cast<double>(info.cpu_celsius), "celsius", ts}
+        };
+    }
+};
 
 // ============================================
 // NUEVO: Funcion helper para modo once
@@ -89,22 +169,32 @@ static int run_once_mode(
     }
 
     // 3. FORMATEAR con los formatters OFICIALES
-    std::unique_ptr<pulso::formatters::IFormatter> formatter;
+std::unique_ptr<pulso::formatters::IFormatter> formatter;
 
-    if (format == "json")
-    {
-        formatter = std::make_unique<pulso::formatters::FormatterJSON>();
-    }
-    else if (format == "csv")
-    {
-        formatter = std::make_unique<pulso::formatters::FormatterCSV>();
-    }
-    else if (format == "prometheus")
-    {
-        formatter = std::make_unique<pulso::formatters::FormatterPrometheus>();
-    }
+if (format == "json")
+{
+    formatter = std::make_unique<pulso::formatters::FormatterJSON>();
+}
+else if (format == "csv")
+{
+    formatter = std::make_unique<pulso::formatters::FormatterCSV>();
+}
+else if (format == "prometheus")
+{
+    formatter = std::make_unique<pulso::formatters::FormatterPrometheus>();
+}
 
-    std::string output = formatter->formatear(snapshot);
+// Validación explícita del formato recibido por CLI
+if (!formatter)
+{
+    std::cerr << "[pulso] Formato no soportado: "
+              << format
+              << "\n";
+
+    return 1;
+}
+
+std::string output = formatter->formatear(snapshot);
 
     // 4. IMPRIMIR a stdout
     std::cout << output;
@@ -115,6 +205,49 @@ static int run_once_mode(
 
     log.info("Modo once: completado. Saliendo con codigo 0.");
     return 0;
+}
+
+/**
+ * @brief Convierte el Snapshot del sampler (lista de métricas) al
+ *        MetricSnapshot que evalúa GestorAlertas.
+ *
+ * CPU llega en porcentaje. Disco y RAM llegan en bytes, así que se
+ * convierten a porcentaje para poder compararlos con los umbrales.
+ */
+static pulso::MetricSnapshot construirMetricSnapshot(
+    const pulso::core::Snapshot& snap)
+{
+    pulso::MetricSnapshot ms;
+
+    double discoUsado = 0.0;
+    double discoTotal = 0.0;
+
+    for (const auto& m : snap.metricas) {
+        if (m.nombre == "cpu.usage") {
+            ms.cpu = m.valor;
+        } else if (m.nombre == "disk.used") {
+            discoUsado = m.valor;
+        } else if (m.nombre == "disk.total") {
+            discoTotal = m.valor;
+        }
+    }
+
+    if (discoTotal > 0.0) {
+        ms.disk = discoUsado / discoTotal * 100.0;
+    }
+
+    // La métrica "memory.used" no trae el total, así que se consulta aparte.
+    try {
+        const auto ram = pulso::collectors::memory::getRamUsage();
+        if (ram.total > 0) {
+            ms.ram = static_cast<double>(ram.used) /
+                     static_cast<double>(ram.total) * 100.0;
+        }
+    } catch (const std::exception&) {
+        // Si no se puede leer la RAM, queda en 0 y no dispara alerta.
+    }
+
+    return ms;
 }
 
 // ============================================
@@ -194,7 +327,33 @@ int main(int argc, char* argv[]) {
         std::make_shared<pulso::collectors::bateria::CollectorBateria>()
      );
 
-    // TODO: agregar CollectorDisk y CollectorNetwork cuando implementen ICollector.
+    if (cli_opts.monitor.disk || usar_todos)
+    {
+        collectors.push_back(
+            std::make_shared<pulso::collectors::disk::DiskCollector>()
+        );
+    }
+
+    // La CLI todavía no tiene un flag dedicado para red, por eso se mantiene activa.
+    collectors.push_back(
+        std::make_shared<pulso::collectors::network::NetworkCollector>()
+    );
+    collectors.push_back(
+        std::make_shared<CollectorProcesos>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorLoadAvg>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorUptime>()
+    );
+
+    collectors.push_back(
+        std::make_shared<CollectorTemperatura>()
+    );
+
 
     // =========================================================================
     // MODO ONCE
@@ -215,13 +374,43 @@ int main(int argc, char* argv[]) {
     pulso::storage::Storage storage(cfg.storage.ruta_db);
     pulso::storage::inicializarEsquema(storage);
 
-    // Sampler (bucle infinito de coleccion)
+
+    // Gestor de alertas con umbrales leídos desde pulso.toml
+        // Conexión propia a la misma base de datos para guardar y consultar alertas
+    SQLite::Database alertasDb(
+        cfg.storage.ruta_db,
+        SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE,
+        5000);  // espera hasta 5 s si el sampler está escribiendo
+    pulso::storage::inicializarEsquema(alertasDb);
+    pulso::alertas::GestorAlertas gestorAlertas(alertasDb);
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "cpu", static_cast<float>(cfg.umbrales.cpu_max), '>'));
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "ram", static_cast<float>(cfg.umbrales.ram_max), '>'));
+    gestorAlertas.addAlerta(pulso::alertas::AlertaUmbral(
+        "disk", static_cast<float>(cfg.umbrales.disco_max), '>'));
+
+    // Cuando una alerta se dispara, queda registrada en el log
+    gestorAlertas.setCallback([](const std::string& mensaje) {
+        pulso::utils::logging::Logger::instancia().warn(mensaje);
+    });
+
+    log.info("GestorAlertas activo -> Umbrales: CPU=" +
+             std::to_string(cfg.umbrales.cpu_max) + "%, RAM=" +
+             std::to_string(cfg.umbrales.ram_max) + "%, Disco=" +
+             std::to_string(cfg.umbrales.disco_max) + "%");
+
+    // Sampler (bucle de colección); en cada ciclo evalúa las alertas
     pulso::sampler::Sampler sampler(
         collectors,
         storage,
-        cfg.sampler.intervalo_segundos
+        cfg.sampler.intervalo_segundos,
+        [&gestorAlertas](const pulso::core::Snapshot& snap) {
+            gestorAlertas.evaluar(construirMetricSnapshot(snap));
+        }
     );
     sampler.iniciar();
+
 
     // Signal handler
     setupSignalHandler();
@@ -243,16 +432,35 @@ int main(int argc, char* argv[]) {
         );
     });
 
-    // GET /version 
+    // GET /version
 server.Get("/version", [](
     const httplib::Request&,
-    httplib::Response& res) 
+    httplib::Response& res)
 {
     res.set_content(
         pulso::http::handleVersion(),
         "application/json"
     );
 });
+server.Get("/config", handle_config);
+
+    // GET /alerts
+    server.Get("/alerts", [&storage, &gestorAlertas](
+        const httplib::Request&,
+        httplib::Response& res)
+    {
+        pulso::MetricSnapshot snap;  // en ceros si todavía no hay datos
+        if (auto ultimo = storage.last()) {
+            snap = construirMetricSnapshot(*ultimo);
+        }
+
+        res.status = 200;
+        res.set_content(
+            pulso::http::handleAlerts(gestorAlertas, snap),
+            "application/json"
+        );
+    });
+
 
     // GET /metrics — pendiente hasta que SystemMonitor se adapte al flujo
     // actual (Storage + ICollector). Ver issue #270.
@@ -263,6 +471,9 @@ server.Get("/version", [](
 
     // GET /metrics/prometheus
     pulso::http::registrarPrometheus(server, storage);
+    // GET /alerts/history
+    pulso::http::registrarAlertsHistory(server, gestorAlertas);
+
 
     // Arrancar servidor HTTP en thread separado
     std::thread http_thread([&]() {
