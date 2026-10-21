@@ -1,5 +1,5 @@
 #include "http/handler_prometheus.hpp"
-#include "formatter/formatter_prometheus.hpp"
+#include "formatters/formatter_prometheus.hpp"
 
 #include <httplib.h>
 
@@ -21,7 +21,7 @@ void registrarPrometheus(
                 return;
             }
 
-            pulso::formatter::FormatterPrometheus formatter;
+            pulso::formatters::FormatterPrometheus formatter;
             std::string body = formatter.formatear(*snapshot);
 
             res.status = 200;
