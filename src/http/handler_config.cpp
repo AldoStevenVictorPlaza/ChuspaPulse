@@ -1,12 +1,10 @@
 #include "handler_config.hpp"
+#include "core/version.hpp"
 
 #include <sstream>
 #include <string>
 
 namespace pulso::http {
-
-/// Versión del agente Pulso, alineada con handler_health.cpp.
-static const std::string VERSION = "0.1.0";
 
 /**
  * @brief Escapa caracteres especiales JSON en un string.
@@ -46,7 +44,7 @@ std::string handleConfig(const pulso::config::Config& config) {
          << "\"http_port\":"     << config.servidor.puerto                 << ","
          << "\"log_level\":\""   << jsonEscape(config.nivel_log)   << "\","
          << "\"output_format\":\"" << jsonEscape(config.output_format) << "\","
-         << "\"version\":\""     << VERSION                               << "\""
+         << "\"version\":\""     << pulso::APP_VERSION << "\""
          << "}";
 
     return json.str();
