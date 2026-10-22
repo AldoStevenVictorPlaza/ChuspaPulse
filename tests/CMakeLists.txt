@@ -142,3 +142,30 @@ target_include_directories(test_alertas_persistencia PRIVATE ${PROJECT_SOURCE_DI
 target_link_libraries(test_alertas_persistencia PRIVATE
     SQLiteCpp sqlite3 GTest::gtest GTest::gtest_main)
 gtest_discover_tests(test_alertas_persistencia)
+
+add_executable(test_formatter_csv
+    formatters/test_formatter_csv.cpp
+    ${PROJECT_SOURCE_DIR}/src/formatters/formatter_csv.cpp
+)
+target_include_directories(test_formatter_csv PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_formatter_csv PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+gtest_discover_tests(test_formatter_csv)
+
+add_executable(test_formatter_text
+    formatters/test_formatter_text.cpp
+    ${PROJECT_SOURCE_DIR}/src/formatters/formatter_text.cpp
+    ${PROJECT_SOURCE_DIR}/src/utils/formato_bytes.cpp
+)
+target_include_directories(test_formatter_text PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+)
+target_link_libraries(test_formatter_text PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+gtest_discover_tests(test_formatter_text)
