@@ -11,4 +11,5 @@ void handler(int signal) {
 
 void setupSignalHandler() {
     signal(SIGINT, handler);
+    signal(SIGTERM, handler);
 }
