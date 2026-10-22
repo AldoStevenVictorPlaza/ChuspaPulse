@@ -2,7 +2,7 @@
 
 ## Resumen
 
-Pulso almacena la información recolectada en una base de datos SQLite. El esquema está definido en `storage/schema.cpp` y organiza las métricas, los resúmenes históricos y las alertas generadas por el sistema.
+ChuspaPulse almacena la información recolectada en una base de datos SQLite. El esquema está definido en `storage/schema.cpp` y organiza las métricas, los resúmenes históricos y las alertas generadas por el sistema.
 
 Aunque SQLite no utiliza claves foráneas formales en este esquema, existen relaciones lógicas entre las tablas que permiten reconstruir el historial de monitoreo.
 
