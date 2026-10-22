@@ -1,6 +1,6 @@
-# Métricas monitoreadas por Pulso
+# Métricas monitoreadas por ChuspaPulse
 
-Pulso es un monitor de infraestructura ligero cuyo objetivo es proporcionar
+ChuspaPulse es un monitor de infraestructura ligero cuyo objetivo es proporcionar
 información clave del estado del sistema en tiempo real o con baja latencia.
 
 A continuación se describen las métricas principales que el sistema planea monitorear, junto con su definición, unidad de medida y frecuencia
@@ -67,7 +67,7 @@ esperada de muestreo.
 
 - Las frecuencias de muestreo pueden ajustarse dependiendo del entorno (desarrollo, producción, dispositivos con recursos limitados, etc.).
 - Algunas métricas pueden variar ligeramente en su implementación entre Linux y Windows debido a diferencias del sistema operativo.
-- Pulso prioriza un bajo consumo de recursos, por lo que evita frecuencias excesivamente altas innecesarias.
+- ChuspaPulse prioriza un bajo consumo de recursos, por lo que evita frecuencias excesivamente altas innecesarias.
 - Las métricas pueden ampliarse en el futuro para incluir:
   - Temperatura del sistema
   - Uso de GPU
