@@ -24,21 +24,13 @@ std::string FormatterPrometheus::formatear(
     std::ostringstream output;
     output << std::setprecision(15);
 
-    bool primera = true;
-
     for (const auto& metrica : snapshot.metricas) {
         std::string nombre = "pulso_" + metrica.nombre;
         std::replace(nombre.begin(), nombre.end(), '.', '_');
 
-        // Linea en blanco entre metricas, sin linea sobrante al final.
-        if (!primera) {
-            output << "\n";
-        }
-        primera = false;
-
         output << "# HELP " << nombre << " Metrica de pulso\n";
         output << "# TYPE " << nombre << " gauge\n";
-        output << nombre << " " << metrica.valor << "\n";
+        output << nombre << " " << metrica.valor << "\n\n";
     }
 
     return output.str();
