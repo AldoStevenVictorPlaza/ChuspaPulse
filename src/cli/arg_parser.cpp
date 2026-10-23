@@ -113,10 +113,10 @@ bool parse_arguments(int argc, char* argv[], pulso::cli::CliOptions& options)
                 return false;
             }
             std::string fmt = argv[++i];
-            if (fmt != "json" && fmt != "csv" && fmt != "prometheus")
+            if (fmt != "json" && fmt != "csv" && fmt != "prometheus" && fmt != "text")
             {
                 std::cerr << "Error: formato no soportado: " << fmt << "\n";
-                std::cerr << "Formatos validos: json, csv, prometheus\n";
+                std::cerr << "Formatos validos: json, csv, prometheus, text\n";
                 return false;
             }
             options.format = fmt;

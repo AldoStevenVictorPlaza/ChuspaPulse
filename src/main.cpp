@@ -39,6 +39,7 @@
 #include "formatters/formatter_json.hpp"
 #include "formatters/formatter_csv.hpp"
 #include "formatters/formatter_prometheus.hpp"
+#include "formatters/formatter_text.hpp"
 
 // HTTP handlers
 #include "http/handler_config.hpp"
@@ -182,6 +183,10 @@ else if (format == "csv")
 else if (format == "prometheus")
 {
     formatter = std::make_unique<pulso::formatters::FormatterPrometheus>();
+}
+else if (format == "text")
+{
+    formatter = std::make_unique<pulso::formatters::FormatterText>();
 }
 
 // Validación explícita del formato recibido por CLI
