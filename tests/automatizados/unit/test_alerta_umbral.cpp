@@ -11,7 +11,7 @@ TEST(AlertaUmbralTest, OperadorMayorDisparaCuandoSuperaUmbral)
     AlertaUmbral alerta("cpu.usage_pct", 50.0f, '>');
     
     MetricSnapshot snap;
-    snap.metrics["cpu.usage_pct"] = 65.5f;
+    snap.cpu = 65.5;
     
     EXPECT_TRUE(alerta.evaluar(snap));
 }
@@ -21,7 +21,7 @@ TEST(AlertaUmbralTest, OperadorMayorNoDisparaSiEstaPorDebajo)
     AlertaUmbral alerta("cpu.usage_pct", 50.0f, '>');
     
     MetricSnapshot snap;
-    snap.metrics["cpu.usage_pct"] = 30.0f;
+    snap.cpu = 30.0;
     
     EXPECT_FALSE(alerta.evaluar(snap));
 }
@@ -31,7 +31,7 @@ TEST(AlertaUmbralTest, OperadorMenorDisparaCuandoEsInferiorAlUmbral)
     AlertaUmbral alerta("ram", 20.0f, '<');
     
     MetricSnapshot snap;
-    snap.metrics["ram"] = 15.2f;
+    snap.ram = 15.2;
     
     EXPECT_TRUE(alerta.evaluar(snap));
 }
@@ -50,4 +50,24 @@ TEST(AlertaUmbralTest, MensajeRetornaStringNoVacio)
     
     std::string msg = alerta.mensaje();
     EXPECT_FALSE(msg.empty());
+}
+
+TEST(AlertaUmbralTest, EvaluarLanzaInvalidArgumentSiLaMetricaNoExiste)
+{
+    AlertaUmbral alerta("temperatura", 38.0f, '>');
+
+    MetricSnapshot snap;
+    snap.cpu = 50.0;
+    snap.ram = 40.0;
+
+    EXPECT_THROW(alerta.evaluar(snap), std::invalid_argument);
+}
+
+TEST(AlertaUmbralTest, GettersRetornanLosDatosDeConstruccion)
+{
+    AlertaUmbral alerta("ram", 75.5f, '<');
+
+    EXPECT_EQ(alerta.metrica(), "ram");
+    EXPECT_FLOAT_EQ(alerta.umbral(), 75.5f);
+    EXPECT_EQ(alerta.operador(), '<');
 }
