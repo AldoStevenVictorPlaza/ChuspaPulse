@@ -13,11 +13,11 @@ static pulso::core::Snapshot crearSnapshot(std::int64_t timestamp) {
 
     auto addMetric = [&](const std::string& name, const std::string& unit, double value) {
         pulso::core::Metrica m;
-        m.name      = name;
-        m.unit      = unit;
-        m.value     = value;
+        m.nombre    = name;
+        m.unidad    = unit;
+        m.valor     = value;
         m.timestamp = timestamp;
-        s.metrics.push_back(m);
+        s.metricas.push_back(m);
     };
 
     addMetric("cpu.usage",        "percent", 42.0);
@@ -79,13 +79,13 @@ TEST_F(StorageTest, Test_GuardarYLeerUltimo) {
     auto resultado = storage.last();
     ASSERT_TRUE(resultado.has_value());
     EXPECT_EQ(resultado->timestamp, 1000);
-    EXPECT_FALSE(resultado->metrics.empty());
+    EXPECT_FALSE(resultado->metricas.empty());
 
     // Verificar que cpu.usage se guardó correctamente
     bool encontrado = false;
-    for (const auto& m : resultado->metrics) {
-        if (m.name == "cpu.usage") {
-            EXPECT_DOUBLE_EQ(m.value, 42.0);
+    for (const auto& m : resultado->metricas) {
+        if (m.nombre == "cpu.usage") {
+            EXPECT_DOUBLE_EQ(m.valor, 42.0);
             encontrado = true;
         }
     }
@@ -155,4 +155,24 @@ TEST_F(StorageTest, Test_PersistenciaTrasReabrir) {
     auto resultado = storage2.last();
     ASSERT_TRUE(resultado.has_value());
     EXPECT_EQ(resultado->timestamp, 9999);
+}
+
+// 9. Con setMaxEntries(3) se conservan solo los 3 snapshots más recientes (FIFO)
+TEST_F(StorageTest, Test_SetMaxEntries_DescartaAntiguosFIFO) {
+    pulso::storage::Storage storage(dbPath_);
+    storage.setMaxEntries(3);
+
+    storage.save(crearSnapshot(100));
+    storage.save(crearSnapshot(200));
+    storage.save(crearSnapshot(300));
+    storage.save(crearSnapshot(400));
+    storage.save(crearSnapshot(500));
+
+    EXPECT_EQ(storage.total(), 3u);
+
+    auto resultado = storage.history(0);
+    ASSERT_EQ(resultado.size(), 3u);
+    EXPECT_EQ(resultado[0].timestamp, 300);
+    EXPECT_EQ(resultado[1].timestamp, 400);
+    EXPECT_EQ(resultado[2].timestamp, 500);
 }
