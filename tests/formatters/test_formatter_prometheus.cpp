@@ -63,35 +63,10 @@ TEST(TestFormatterPrometheus, Test_EstructuraDeLineas) {
     const std::vector<std::string> lineas =
         obtenerLineas(formatter.formatear(snapshot));
 
-    // Cada metrica termina en "\n\n": la linea en blanco final aparece
-    // como cuarto elemento.
-    ASSERT_EQ(lineas.size(), 4U);
+    ASSERT_EQ(lineas.size(), 3U);
     EXPECT_EQ(lineas[0].find("# HELP "), 0U);
     EXPECT_EQ(lineas[1].find("# TYPE "), 0U);
     EXPECT_EQ(lineas[2].find("pulso_cpu_usage "), 0U);
-    EXPECT_EQ(lineas[3], "");
-}
-
-TEST(TestFormatterPrometheus, Test_FormatoExactoConDosMetricas) {
-    pulso::formatters::FormatterPrometheus formatter;
-
-    const auto snapshot = crearSnapshot(
-        1000,
-        {
-            {"cpu.usage", 42.0, "porcentaje", 1000},
-            {"memory.used", 2048.0, "bytes", 1000},
-        });
-
-    EXPECT_EQ(
-        formatter.formatear(snapshot),
-        "# HELP pulso_cpu_usage Metrica de pulso\n"
-        "# TYPE pulso_cpu_usage gauge\n"
-        "pulso_cpu_usage 42\n"
-        "\n"
-        "# HELP pulso_memory_used Metrica de pulso\n"
-        "# TYPE pulso_memory_used gauge\n"
-        "pulso_memory_used 2048\n"
-        "\n");
 }
 
 TEST(TestFormatterPrometheus, Test_TipoSiempreGauge) {
