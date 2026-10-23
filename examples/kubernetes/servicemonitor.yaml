@@ -1,13 +1,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: pulso
+  name: chuspapulse
   labels:
     release: prometheus
 spec:
   selector:
     matchLabels:
-      app: pulso
+      app: chuspapulse
 
   endpoints:
     - port: metrics
