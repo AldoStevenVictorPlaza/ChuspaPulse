@@ -10,7 +10,7 @@ http://localhost:PUERTO
 ### GET /metrics
 > **Estado:** Disponible / Funcional
 **Descripción:**
-Devuelve las métricas actuales del sistema monitoreado. 
+Devuelve el último snapshot. 
 
 **Parámetros opcionales:**
 
