@@ -26,3 +26,19 @@ TEST(FormatoBytesHumanosTest, ValoresNegativos) {
 TEST(FormatoBytesHumanosTest, ValorCero) {
     EXPECT_EQ(pulso::utils::formatearBytesHumanos(0), "0.0 B");
 }
+
+TEST(FormatoBytesHumanosTest, GigabyteExacto) {
+    EXPECT_EQ(pulso::utils::formatearBytesHumanos(1073741824), "1.0 GB");
+}
+
+TEST(FormatoBytesHumanosTest, TerabyteExacto) {
+    EXPECT_EQ(pulso::utils::formatearBytesHumanos(1099511627776.0), "1.0 TB");
+}
+
+TEST(FormatoBytesHumanosTest, TopeEnTerabytes) {
+    EXPECT_EQ(pulso::utils::formatearBytesHumanos(1024.0 * 1099511627776.0), "1024.0 TB");
+}
+
+TEST(FormatoBytesHumanosTest, RedondeoAUnDecimal) {
+    EXPECT_EQ(pulso::utils::formatearBytesHumanos(1.5), "1.5 B");
+}
