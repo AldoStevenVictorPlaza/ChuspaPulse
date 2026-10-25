@@ -67,7 +67,7 @@ void registrarHistory(
 
             res.set_content(
                 body,
-                "application/json"
+                formatter.contentType()
             );
         }
         catch (const std::exception&) {
