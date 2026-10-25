@@ -26,7 +26,7 @@ esperada de muestreo.
 - **Rango normal**: 5% - 70% en servidor estándar
 - **Valor anormalmente alto (> 85%)**: Indica sobrecarga, procesos pesados o posible degradación del rendimiento
 - **Valor anormalmente bajo (< 2%)**: Sistema inactivo, sin carga de trabajo significativa
-- - **Nombre de métrica**: `cpu.usage`
+- **Nombre de métrica**: `cpu.usage`
 
 #### RAM
 - **Unidad exacta**: Megabytes (MB) / Porcentaje (%)
@@ -62,7 +62,7 @@ esperada de muestreo.
 - **Valor anormalmente alto**: Valor superior a núcleos → sistema saturado
 - **Valor anormalmente bajo**: Carga mínima, recursos libres
 - **Campo JSON**: `load_avg_1min`, `load_avg_5min`, `load_avg_15min`
--
+
 ## Notas adicionales
 
 - Las frecuencias de muestreo pueden ajustarse dependiendo del entorno (desarrollo, producción, dispositivos con recursos limitados, etc.).
