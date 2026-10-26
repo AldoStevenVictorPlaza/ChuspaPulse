@@ -71,3 +71,74 @@ TEST(AlertaUmbralTest, GettersRetornanLosDatosDeConstruccion)
     EXPECT_FLOAT_EQ(alerta.umbral(), 75.5f);
     EXPECT_EQ(alerta.operador(), '<');
 }
+
+TEST(AlertaUmbralTest, OperadorMayorNoDisparaCuandoValorEsIgualAlUmbral)
+{
+    AlertaUmbral alerta("cpu", 50.0f, '>');
+
+    MetricSnapshot snap;
+    snap.cpu = 50.0;
+
+    EXPECT_FALSE(alerta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, OperadorMenorNoDisparaCuandoValorEsIgualAlUmbral)
+{
+    AlertaUmbral alerta("ram", 20.0f, '<');
+
+    MetricSnapshot snap;
+    snap.ram = 20.0;
+
+    EXPECT_FALSE(alerta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, EvaluarDiskDisparaCuandoSuperaUmbral)
+{
+    AlertaUmbral alerta("disk", 80.0f, '>');
+
+    MetricSnapshot snap;
+    snap.disk = 95.0;
+
+    EXPECT_TRUE(alerta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, EvaluarRxBytesDisparaCuandoSuperaUmbral)
+{
+    AlertaUmbral alerta("rx_bytes", 1000.0f, '>');
+
+    MetricSnapshot snap;
+    snap.rx_bytes = 2048.0;
+
+    EXPECT_TRUE(alerta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, EvaluarTxBytesDisparaCuandoSuperaUmbral)
+{
+    AlertaUmbral alerta("tx_bytes", 1000.0f, '>');
+
+    MetricSnapshot snap;
+    snap.tx_bytes = 2048.0;
+
+    EXPECT_TRUE(alerta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, AliasCpuEquivaleACpuUsagePct)
+{
+    MetricSnapshot snap;
+    snap.cpu = 65.5;
+
+    AlertaUmbral alertaAlias("cpu", 50.0f, '>');
+    AlertaUmbral alertaCompleta("cpu.usage_pct", 50.0f, '>');
+
+    EXPECT_EQ(alertaAlias.evaluar(snap), alertaCompleta.evaluar(snap));
+}
+
+TEST(AlertaUmbralTest, MensajeContieneMetricaYOperador)
+{
+    AlertaUmbral alerta("disk", 80.0f, '>');
+
+    std::string msg = alerta.mensaje();
+
+    EXPECT_NE(msg.find("disk"), std::string::npos);
+    EXPECT_NE(msg.find('>'), std::string::npos);
+}
