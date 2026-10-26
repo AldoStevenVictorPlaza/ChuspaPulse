@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 
-namespace pulso::platform::windows {
+namespace ChuspaPulse::platform::windows {
 
 UptimeInfo getUptimeWindows();
 
