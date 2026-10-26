@@ -4,11 +4,11 @@
 #include <ctime>
 #include <iostream>
 
-namespace pulso::sampler {
+namespace ChuspaPulse::sampler {
 
 Sampler::Sampler(
-    std::vector<std::shared_ptr<pulso::collectors::ICollector>> collectors,
-    pulso::storage::Storage& storage,
+    std::vector<std::shared_ptr<ChuspaPulse::collectors::ICollector>> collectors,
+    ChuspaPulse::storage::Storage& storage,
     int intervaloSegundos,
     SnapshotCallback onSnapshot)
     : collectors_(std::move(collectors)),
@@ -31,7 +31,7 @@ void Sampler::iniciar() {
     thread_ = std::thread([this]() {
         while (corriendo_) {
 
-            pulso::core::Snapshot snapshot;
+            ChuspaPulse::core::Snapshot snapshot;
             snapshot.timestamp = std::time(nullptr);
 
             for (const auto& collector : collectors_) {
@@ -103,4 +103,4 @@ bool Sampler::corriendo() const {
     return corriendo_;
 }
 
-} // namespace pulso::sampler
+} // namespace ChuspaPulse::sampler
