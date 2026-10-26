@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace pulso::config {
+namespace ChuspaPulse::config {
 
 // ---------------------------------------------------------------------------
 // Excepción
@@ -54,7 +54,7 @@ struct ConfigSampler {
 };
 
 struct ConfigStorage {
-    std::string ruta_db = "pulso.db";
+    std::string ruta_db = "ChuspaPulse.db";
 };
 
 struct Config {
@@ -79,4 +79,4 @@ Config cargar(const std::string& ruta);
 /// Devuelve una Config construida con todos los valores por defecto.
 Config porDefecto();
 
-} // namespace pulso::config
+} // namespace ChuspaPulse::config
