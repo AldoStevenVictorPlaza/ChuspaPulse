@@ -13,12 +13,12 @@ typedef struct {
 
 NetInfo getNetUsage();
 
-namespace ChuspaPulse::collectors::network {
+namespace pulso::collectors::network {
 
-class NetworkCollector : public ChuspaPulse::collectors::ICollector {
+class NetworkCollector : public pulso::collectors::ICollector {
 public:
     std::string nombre() const override;
-    std::vector<ChuspaPulse::core::Metrica> recolectar() override;
+    std::vector<pulso::core::Metrica> recolectar() override;
 };
 
-}  // namespace ChuspaPulse::collectors::network
+}  // namespace pulso::collectors::network
