@@ -4,11 +4,11 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
-namespace pulso::http {
+namespace ChuspaPulse::http {
 
 void registrarAlertsHistory(
     httplib::Server& servidor,
-    const pulso::alertas::GestorAlertas& gestor)
+    const ChuspaPulse::alertas::GestorAlertas& gestor)
 {
     servidor.Get("/alerts/history",
         [&gestor](const httplib::Request& req, httplib::Response& res)
@@ -58,4 +58,4 @@ void registrarAlertsHistory(
     });
 }
 
-} // namespace pulso::http
+} // namespace ChuspaPulse::http
