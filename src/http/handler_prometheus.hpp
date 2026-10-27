@@ -3,11 +3,11 @@
 #include <httplib.h>
 #include "storage/storage.hpp"
 
-namespace pulso::http {
+namespace ChuspaPulse::http {
 
 /// Registra el handler de /metrics/prometheus en el servidor httplib.
 void registrarPrometheus(
     httplib::Server& servidor,
-    const pulso::storage::Storage& storage);
+    const ChuspaPulse::storage::Storage& storage);
 
-} // namespace pulso::http
+} // namespace ChuspaPulse::http
