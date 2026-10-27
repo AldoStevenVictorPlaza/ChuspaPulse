@@ -6,7 +6,7 @@
 
 #include "utils/formato_bytes.hpp"
 
-namespace pulso::formatters {
+namespace ChuspaPulse::formatters {
 
 std::string FormatterText::formato() const {
     return "text";
@@ -27,7 +27,7 @@ static std::string formatearTimestamp(std::int64_t ts) {
 }
 
 std::string FormatterText::formatear(
-    const pulso::core::Snapshot& snapshot
+    const ChuspaPulse::core::Snapshot& snapshot
 ) const {
     // Extraer métricas del snapshot (valores crudos en bytes / bytes-por-segundo)
     double cpu_pct = 0.0;
@@ -60,18 +60,18 @@ std::string FormatterText::formatear(
     std::ostringstream oss;
     oss << formatearTimestamp(snapshot.timestamp)
         << " | CPU: " << std::fixed << std::setprecision(1) << cpu_pct << "%"
-        << " | RAM: " << pulso::utils::formatearBytesHumanos(ram_usado_bytes)
-        << "/" << pulso::utils::formatearBytesHumanos(ram_total_bytes)
-        << " | Disco: " << pulso::utils::formatearBytesHumanos(disco_usado_bytes)
-        << "/" << pulso::utils::formatearBytesHumanos(disco_total_bytes)
-        << " | Red: " << pulso::utils::formatearBytesHumanos(net_rx_bytes) << "/s"
-        << "/" << pulso::utils::formatearBytesHumanos(net_tx_bytes) << "/s";
+        << " | RAM: " << ChuspaPulse::utils::formatearBytesHumanos(ram_usado_bytes)
+        << "/" << ChuspaPulse::utils::formatearBytesHumanos(ram_total_bytes)
+        << " | Disco: " << ChuspaPulse::utils::formatearBytesHumanos(disco_usado_bytes)
+        << "/" << ChuspaPulse::utils::formatearBytesHumanos(disco_total_bytes)
+        << " | Red: " << ChuspaPulse::utils::formatearBytesHumanos(net_rx_bytes) << "/s"
+        << "/" << ChuspaPulse::utils::formatearBytesHumanos(net_tx_bytes) << "/s";
 
     return oss.str();
 }
 
 std::string FormatterText::formatearHistorial(
-    const std::vector<pulso::core::Snapshot>& snapshots
+    const std::vector<ChuspaPulse::core::Snapshot>& snapshots
 ) const {
     std::ostringstream oss;
 
@@ -82,4 +82,4 @@ std::string FormatterText::formatearHistorial(
     return oss.str();
 }
 
-} // namespace pulso::formatters
+} // namespace ChuspaPulse::formatters
